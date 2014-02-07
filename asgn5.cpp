@@ -7,7 +7,7 @@
 #include "Event.h"
 using namespace std;
 
-enum state {RUNNING,READY,BLOCKED,TERMINATED,LEVEL_END};
+enum state {RUNNING,READY,BLOCKED,TERMINATED};
 
 struct process_phase{
 	int iterations;
@@ -110,7 +110,7 @@ void process_proc_file(){
 			    pp.iterations = iter;
 			    pp.cpu_time = cpu_t;
 			    pp.io_time = io_t;
-			    pp.status = READY;
+			    // pp.status = READY;
 			    (proc.phases).push_back(pp);
 			    getline(infile, line2);
 			  }
@@ -155,9 +155,9 @@ void process_proc_file(){
 void processEventList(){
 	while (!event_list.empty()){
 		Event e = event_list.top();
-		present_time = e.start_time;
+		present_time = e.time;
 
-		eventType t = e.type;
+		eventType type = e.type;
 		int id = e.process_id;
 		if (type == LEVEL_END){
 			c.s = my_scheduler.levels[id];
@@ -168,12 +168,14 @@ void processEventList(){
 				if (c.p.start_priority < process_list[id-1].start_priority){
 					// run this process
 					Event k(id, CPU_END, present_time + process_list[id-1].getPhaseCPUTime());
+					event_list.push(k);
 					process_list[id-1].reduceIterations(present_time);
-					Event k(c.p.process_id, CPU_CONT, process_list[id].currentCPUTime() - (present_time - process_list[id].start_time));
+					Event k1(c.p.p_id, CPU_CONT, process_list[id].currentCPUTime - (present_time - process_list[id].start_time));
 					c.p = process_list[id -1];
+					event_list.push(k1);
 				}
 				else {
-					Event k(id, CPU_START, process_list[c.p.process_id].currentCPUTime() - (present_time - process_list[c.p.process_id].start_time));
+					Event k(id, CPU_START, process_list[c.p.p_id].currentCPUTime - (present_time - process_list[c.p.p_id].start_time));
 				}
 
 			}
@@ -181,21 +183,25 @@ void processEventList(){
 				c.p = process_list[id -1];
 				c.busy = true;
 				Event k(id, CPU_END, present_time + process_list[id-1].getPhaseCPUTime());
+				event_list.push(k);
 				process_list[id-1].reduceIterations(present_time);
 			}
 
 		}
-		else if (type = CPU_CONT){
+		else if (type == CPU_CONT){
 			c.busy = true;
 			if (c.busy){
 				if (c.p.start_priority < process_list[id-1].start_priority){
 					// run this process
 					Event k(id, CPU_END, present_time + process_list[id-1].currentCPUTime);
-					Event k(c.p.process_id, CPU_CONT, process_list[id].currentCPUTime() - (present_time - process_list[id].start_time));
+					event_list.push(k);
+					Event k1(c.p.p_id, CPU_CONT, process_list[id].currentCPUTime - (present_time - process_list[id].start_time));
+					event_list.push(k1);
 					c.p = process_list[id -1];
 				}
 				else {
-					Event k(id, CPU_CONT, process_list[c.p.process_id].currentCPUTime() - (present_time - process_list[c.p.process_id].start_time));
+					Event k(id, CPU_CONT, process_list[c.p.p_id].currentCPUTime - (present_time - process_list[c.p.p_id].start_time));
+					event_list.push(k);
 				}
 
 			}
@@ -203,10 +209,11 @@ void processEventList(){
 				c.p = process_list[id -1];
 				c.busy = true;
 				Event k(id, CPU_END, present_time + process_list[id-1].currentCPUTime);
+				event_list.push(k);
 				process_list[id-1].start_time = present_time;
 			}
 		}
-		else if (type = CPU_END){
+		else if (type == CPU_END){
 			c.busy = false;
 
 
@@ -222,7 +229,7 @@ void processEventList(){
 
 int main(){
 	c.busy = false;
-	c.process = NULL;
+	//c.p = NULL;
 
 	process_proc_file();
 	cout<<(process_list[1].phases[1]).io_time<<endl;
@@ -240,7 +247,7 @@ int main(){
 	int t = 0;
 	for (int i = 0; i < my_scheduler.levels.size(); i++){
 		Event e(i+1 , LEVEL_END, t+my_scheduler.levels[i].time_slice);
-		t+ = my_scheduler.levels[i].time_slice;
+		t += my_scheduler.levels[i].time_slice;
 	}
 
 	processEventList();

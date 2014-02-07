@@ -4,7 +4,7 @@
 using namespace std;
 
 // constructor functions
- Event(int id, eventType ty, double ti) {
+Event::Event(int id, eventType ty, double ti) {
   process_id=id; type=ty; time=ti; 
 }
 
