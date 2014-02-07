@@ -45,7 +45,7 @@ class Event {
   // void setTime(double t);                   //set time of event  
   // void setKey(double t);                    //set key of event
   
-  // void printType() const;                   //print type of event
+  string printType() const;                   //print type of event
 };
 
 

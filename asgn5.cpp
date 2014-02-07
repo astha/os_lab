@@ -63,6 +63,15 @@ public:
 			return true;
 	}
 
+	bool hasMoreIterations2(){
+		//printf("IDHAR =  %d %d\n",currentPhase,phases[currentPhase].iterations);
+		if ((currentPhase >= phases.size() - 1) && phases[currentPhase].iterations == 0) {
+			return false;
+		}
+		else 
+			return true;
+	}
+
 };
 
 struct sc_level{
@@ -125,26 +134,28 @@ void process_proc_file(){
 			    // pp.status = READY;
 			    (proc.phases).push_back(pp);
 			    getline(infile, line2);
-			  }
-			  process_list.push_back(proc);
 			}
+			proc.currentCPUTime = proc.phases[0].cpu_time;
+
+			process_list.push_back(proc);
 		}
+	}
 	// cout<<(process_list[1].phases[1]).io_time<<endl;
 	// return 0;
-	}
+}
 
-	void process_scheduler_file(){
-		string line, line2;
-		int level_count;
-		int prior;
-		int s_lvl;
-		int t_slice;
-		ifstream infile("SCHEDULER_SPEC");
-		while (std::getline(infile, line))
-		{
-			if(line=="SCHEDULER"){
-				getline(infile, line2);
-				std::istringstream iss(line2);
+void process_scheduler_file(){
+	string line, line2;
+	int level_count;
+	int prior;
+	int s_lvl;
+	int t_slice;
+	ifstream infile("SCHEDULER_SPEC");
+	while (std::getline(infile, line))
+	{
+		if(line=="SCHEDULER"){
+			getline(infile, line2);
+			std::istringstream iss(line2);
 		    if (!(iss >> level_count)) { break; } // error
 		    // cout<<pid<<endl<<prior<<endl;
 
@@ -163,15 +174,6 @@ void process_proc_file(){
 	}
 }
 
-int getNextProcess(int currentProcess){
-	int n = process_list.size();
-	for (int i = 1; i <= n ; i++){
-		if (process_list[(i+currentProcess)%n].isReady()){
-			return (i+currentProcess)%n;
-		}
-	}
-	return -1;
-}
 void processEventListMulti(){
 	// int count = 50;	
 	while (!event_list.empty() ){
@@ -272,13 +274,28 @@ void processEventListMulti(){
 	}
 
 }
+
+int getNextProcess(int currentProcess){
+	int n = process_list.size();
+	currentProcess--;
+	for (int i = 1; i <= n ; i++){
+
+		if (process_list[(i+currentProcess)%n].isReady()){
+			return ((i+currentProcess)%n + 1);
+		}
+	}
+	return -1;
+}
+
+
 void processEventListTimeSharing(){
 	int time_slice = my_scheduler.levels[0].time_slice;
-	// int count = 50;	
-	while (!event_list.empty() ){
+	int count = 50;	
+	while (!event_list.empty() && count-- ){
 		// cout << "ASTHA" << endl;
 		Event e = event_list.top();
-		printf("EVENT = %d %d %lf\n",e.process_id,e.type,e.time);
+		event_list.pop();
+		printf("EVENT = %d %s %lf\n",e.process_id,e.printType().c_str(),e.time);
 		
 		present_time = e.time;
 
@@ -302,60 +319,75 @@ void processEventListTimeSharing(){
 				c.p = process_list[id-1];
 				c.busy = true;
 				//int time_required = ;
-				process_list[id-1].currentCPUTime = process_list[id-1].getPhaseCPUTime();
 				process_list[id-1].start_time = present_time;
 				process_list[id-1].status = RUNNING;
-
+				printf("HEREHERE = %d\n",process_list[id-1].currentCPUTime );
 				if (time_slice >= process_list[id-1].currentCPUTime){
 					Event k(id, CPU_END, present_time + process_list[id-1].currentCPUTime);
 					event_list.push(k);
-
+					process_list[id-1].currentCPUTime = 0;
 				}
 				else {
 					Event k(id, TIME_SLICE, present_time + time_slice);
 					event_list.push(k);
+					process_list[id-1].currentCPUTime -= time_slice;
+					//printf("HERE = %d\n",process_list[id-1].currentCPUTime );
 				}
 			}			
 		}
 		else if (type == TIME_SLICE) {
 			if (c.busy){
-				process_list[runningProcess-1].preempt(present_time);
+				//process_list[runningProcess-1].preempt(present_time);
 				process_list[id-1].status = READY;
 			}
 			int new_id = getNextProcess(runningProcess);
 			if (new_id==-1){
-				event_list.pop();
+				//event_list.pop();
 				continue;
 			}
 			else{
 				Event k(new_id, CPU_START, present_time);
 				event_list.push(k);
 
-			}			
+			}
+			c.busy = false;			
 		}
 		else if (type == CPU_END){
 			c.busy = false;
 			process_list[id-1].status= BLOCKED;
 			process_list[id-1].phases[process_list[id-1].currentPhase].iterations --;
-			if (process_list[id-1].phases[process_list[id-1].currentPhase].iterations == 0){
-				process_list[id-1].currentPhase ++;
-			}
-			if (c.p.p_id == id && process_list[id -1].hasMoreIterations()){
-				Event e(id, CPU_START, present_time + process_list[id-1].getPhaseIOTime());
+			//printf("E %d  %d\n",c.p.p_id, process_list[id -1].hasMoreIterations2());
+			if (c.p.p_id == id && process_list[id -1].hasMoreIterations2()){
+				printf("G = %d\n", present_time + process_list[id-1].phases[process_list[id-1].currentPhase].io_time);
+				
+				Event e(id, CPU_START, present_time + process_list[id-1].phases[process_list[id-1].currentPhase].io_time);
 				event_list.push(e);
 			}
+
+			if (process_list[id-1].phases[process_list[id-1].currentPhase].iterations != 0){
+			process_list[id-1].currentCPUTime = process_list[id-1].phases[process_list[id-1].currentPhase].cpu_time;
+				}
+				else {
+
+				process_list[id-1].currentCPUTime = process_list[id-1].phases[process_list[id-1].currentPhase+1].cpu_time;
+				process_list[id-1].currentPhase ++;	
+			}
+
+
 			int new_id = getNextProcess(runningProcess);
+			//printf("HERE = %d\n",new_id);
 			if (new_id==-1){
-				event_list.pop();
+				//event_list.pop();
 				continue;
 			}
 			else{
 				Event k(new_id, CPU_START, present_time);
 				event_list.push(k);
 
-			}			
+			}
+
 		}
-		event_list.pop();
+		
 	}
 }
 

@@ -32,23 +32,27 @@ void Event::print(ostream & outstream) const {
   outstream << "ID: " << process_id << ", type=" << type << ", time=" << time << endl;
 }
  
-// //print type of event 
-// void Event::printType() const{
-//   switch(type){
-//     case (0) :
-//       cout << "ARRIVAL";
-//       break;
-//     case (1) :
-//       cout << "DEPARTURE";
-//       break;
-//     case (2) :
-//       cout << "PROBE";
-//       break;
-//     case (3) :
-//       cout << "TIMEOUT";
-//       break;
-//   }
-// }
+//print type of event 
+string Event::printType() const{
+  switch(type){
+    case (0) :
+      return "CPU_START";
+      break;
+    case (1) :
+      return "CPU_END";
+      break;
+    case (2) :
+      return "CPU_CONT";
+      break;
+    case (3) :
+      return "LEVEL_END";
+      break;
+ 	case (4) :
+      return "TIME_SLICE";
+      break;
+    
+  }
+}
 
 // // accessor methods  
 // double Event::getTime() const {
