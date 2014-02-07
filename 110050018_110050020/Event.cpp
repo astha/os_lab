@@ -18,9 +18,18 @@ Event::Event(int id, eventType ty, double ti) {
 //which is a max-heap. We want min-heap.
 //This will get the needed effect.
 bool Event::operator<(const Event& e) const  {
-  if (time!=e.time) {return (time < e.time);}
+  if (time!=e.time) {return (time > e.time);}
   else if (type == CPU_END) return true;
-  else return false;
+  else if (e.type == CPU_END) return false;
+  else if (type == CPU_START) {
+    if (e.type == TIME_SLICE) return true; 
+    else return false;
+  }  
+  else if (e.type == CPU_START) {
+    if (type == TIME_SLICE) return true; 
+    else return false;
+  }  
+  else return true	;
 }
 
 // print event details
@@ -28,23 +37,27 @@ void Event::print(ostream & outstream) const {
   outstream << "ID: " << process_id << ", type=" << type << ", time=" << time << endl;
 }
  
-// //print type of event 
-// void Event::printType() const{
-//   switch(type){
-//     case (0) :
-//       cout << "ARRIVAL";
-//       break;
-//     case (1) :
-//       cout << "DEPARTURE";
-//       break;
-//     case (2) :
-//       cout << "PROBE";
-//       break;
-//     case (3) :
-//       cout << "TIMEOUT";
-//       break;
-//   }
-// }
+//print type of event 
+string Event::printType() const{
+  switch(type){
+    case (0) :
+      return "CPU_START";
+      break;
+    case (1) :
+      return "CPU_END  ";
+      break;
+    case (2) :
+      return "CPU_CONT ";
+      break;
+    case (3) :
+      return "LEVEL_END";
+      break;
+ 	case (4) :
+      return "TIME_SLICE";
+      break;
+    
+  }
+}
 
 // // accessor methods  
 // double Event::getTime() const {

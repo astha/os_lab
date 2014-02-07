@@ -9,7 +9,7 @@ defined by an ID, a type and a time at which the event is scheduled.
 using namespace std;
 
 //Enumerated type and namespace to use mnemonics for Event types
-namespace EventTypeNames { enum eventType {CPU_START,CPU_END, CPU_CONT,LEVEL_END};}
+namespace EventTypeNames { enum eventType {CPU_START,CPU_END, CPU_CONT,LEVEL_END,TIME_SLICE};}
 using namespace EventTypeNames;
 
 class Event {
@@ -45,7 +45,7 @@ class Event {
   // void setTime(double t);                   //set time of event  
   // void setKey(double t);                    //set key of event
   
-  // void printType() const;                   //print type of event
+  string printType() const;                   //print type of event
 };
 
 
