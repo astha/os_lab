@@ -71,6 +71,7 @@ struct cpu{
 	process p;
 	bool busy;
 	sc_level s;
+	int scheduler_time_next;
 };
 
 vector<process> process_list;
@@ -160,68 +161,75 @@ void processEventList(){
 
 		eventType type = e.type;
 		int id = e.process_id;
+		cout << "EVENT : " << e.time << " " << e.type << " " << e.process_id << endl;
 		if (type == LEVEL_END){
 			c.s = my_scheduler.levels[id];
+			c.scheduler_time_next += c.s.time_slice;
 		}
-		else if (type == CPU_START){
-			c.busy = true;
-			if (c.busy){
-				if (c.p.start_priority < process_list[id-1].start_priority){
+		else if (type == CPU_START) {
+			if (process_list[id-1].start_priority < c.s.priority){
+				Event k(id, CPU_START, c.scheduler_time_next);
+			}
+			else{
+				c.busy = true;
+				if (c.busy){
+					if (c.p.start_priority < process_list[id-1].start_priority){
 					// run this process
+						Event k(id, CPU_END, present_time + process_list[id-1].getPhaseCPUTime());
+						event_list.push(k);
+						process_list[id-1].reduceIterations(present_time);
+						Event k1(c.p.p_id, CPU_CONT, process_list[id].currentCPUTime - (present_time - process_list[id].start_time));
+						c.p = process_list[id -1];
+						event_list.push(k1);
+					}
+					else {
+						Event k(id, CPU_START, process_list[c.p.p_id].currentCPUTime - (present_time - process_list[c.p.p_id].start_time));
+					}
+
+				}
+				else {
+					c.p = process_list[id -1];
+					c.busy = true;
 					Event k(id, CPU_END, present_time + process_list[id-1].getPhaseCPUTime());
 					event_list.push(k);
 					process_list[id-1].reduceIterations(present_time);
-					Event k1(c.p.p_id, CPU_CONT, process_list[id].currentCPUTime - (present_time - process_list[id].start_time));
-					c.p = process_list[id -1];
-					event_list.push(k1);
 				}
-				else {
-					Event k(id, CPU_START, process_list[c.p.p_id].currentCPUTime - (present_time - process_list[c.p.p_id].start_time));
-				}
-
 			}
-			else {
-				c.p = process_list[id -1];
-				c.busy = true;
-				Event k(id, CPU_END, present_time + process_list[id-1].getPhaseCPUTime());
-				event_list.push(k);
-				process_list[id-1].reduceIterations(present_time);
-			}
-
 		}
 		else if (type == CPU_CONT){
-			c.busy = true;
-			if (c.busy){
-				if (c.p.start_priority < process_list[id-1].start_priority){
-					// run this process
-					Event k(id, CPU_END, present_time + process_list[id-1].currentCPUTime);
-					event_list.push(k);
-					Event k1(c.p.p_id, CPU_CONT, process_list[id].currentCPUTime - (present_time - process_list[id].start_time));
-					event_list.push(k1);
-					c.p = process_list[id -1];
-				}
-				else {
-					Event k(id, CPU_CONT, process_list[c.p.p_id].currentCPUTime - (present_time - process_list[c.p.p_id].start_time));
-					event_list.push(k);
-				}
-
+			if (process_list[id-1].start_priority < c.s.priority){
+				Event k(id, CPU_START, c.scheduler_time_next);
 			}
 			else {
-				c.p = process_list[id -1];
+
 				c.busy = true;
-				Event k(id, CPU_END, present_time + process_list[id-1].currentCPUTime);
-				event_list.push(k);
-				process_list[id-1].start_time = present_time;
+				if (c.busy){
+					if (c.p.start_priority < process_list[id-1].start_priority){
+					// run this process
+						Event k(id, CPU_END, present_time + process_list[id-1].currentCPUTime);
+						event_list.push(k);
+						Event k1(c.p.p_id, CPU_CONT, process_list[id].currentCPUTime - (present_time - process_list[id].start_time));
+						event_list.push(k1);
+						c.p = process_list[id -1];
+					}
+					else {
+						Event k(id, CPU_CONT, process_list[c.p.p_id].currentCPUTime - (present_time - process_list[c.p.p_id].start_time));
+						event_list.push(k);
+					}
+
+				}
+				else {
+					c.p = process_list[id -1];
+					c.busy = true;
+					Event k(id, CPU_END, present_time + process_list[id-1].currentCPUTime);
+					event_list.push(k);
+					process_list[id-1].start_time = present_time;
+				}
 			}
 		}
 		else if (type == CPU_END){
 			c.busy = false;
-
-
 		}
-
-
-
 		event_list.pop();
 
 	}
@@ -231,29 +239,29 @@ void processEventList(){
 int main(){
 	c.busy = false;
 	//c.p = NULL;
-cout << "ASTHA" << endl;
+	cout << "ASTHA" << endl;
 	process_proc_file();
 	cout<<(process_list[1].phases[1]).io_time<<endl;
-	cout << "ASTHA" << endl;
+
 	process_scheduler_file();
-	cout << "ASTHA" << endl;
 	cout<<my_scheduler.levels[1].time_slice<<endl;
-cout << "ASTHA" << endl;
+	cout << "ASTHA" << endl;
 	c.s = my_scheduler.levels[0];
-	
-cout << "ASTHA" << endl;
+	c.scheduler_time_next = my_scheduler.levels[0].time_slice;
+	cout << "ASTHA" << endl;
 	present_time = 0;
 	for (int i = 0 ; i < process_list.size(); i++){
 		Event e(process_list[i].p_id, CPU_START, process_list[i].admission );
 		event_list.push(e);
 	}
 	int t = 0;
+	cout << "ASTHA" << endl;
 	for (int i = 0; i < my_scheduler.levels.size(); i++){
 		Event e(i+1 , LEVEL_END, t+my_scheduler.levels[i].time_slice);
 		t += my_scheduler.levels[i].time_slice;
 	}
 
- cout << "ASTHA" << endl;
+	cout << "ASTHA" << endl;
 	processEventList();
 
 
