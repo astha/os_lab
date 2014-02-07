@@ -18,9 +18,9 @@ Event::Event(int id, eventType ty, double ti) {
 //which is a max-heap. We want min-heap.
 //This will get the needed effect.
 bool Event::operator<(const Event& e) const  {
-  if (time!=e.time) {return (time < e.time);}
-  else if (type == CPU_END) return true;
-  else return false;
+  if (time!=e.time) {return (time > e.time);}
+  else if (type == CPU_END) return false;
+  else return true;
 }
 
 // print event details

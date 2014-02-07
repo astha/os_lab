@@ -184,6 +184,7 @@ void processEventList(){
 					}
 					else {
 						Event k(id, CPU_START, process_list[c.p.p_id].currentCPUTime - (present_time - process_list[c.p.p_id].start_time));
+						event_list.push(k);
 					}
 
 				}
