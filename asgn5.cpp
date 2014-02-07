@@ -154,6 +154,7 @@ void process_proc_file(){
 
 void processEventList(){
 	while (!event_list.empty()){
+		// cout << "ASTHA" << endl;
 		Event e = event_list.top();
 		present_time = e.time;
 
@@ -230,15 +231,17 @@ void processEventList(){
 int main(){
 	c.busy = false;
 	//c.p = NULL;
-
+cout << "ASTHA" << endl;
 	process_proc_file();
 	cout<<(process_list[1].phases[1]).io_time<<endl;
+	cout << "ASTHA" << endl;
 	process_scheduler_file();
+	cout << "ASTHA" << endl;
 	cout<<my_scheduler.levels[1].time_slice<<endl;
-
+cout << "ASTHA" << endl;
 	c.s = my_scheduler.levels[0];
 	
-
+cout << "ASTHA" << endl;
 	present_time = 0;
 	for (int i = 0 ; i < process_list.size(); i++){
 		Event e(process_list[i].p_id, CPU_START, process_list[i].admission );
@@ -250,6 +253,7 @@ int main(){
 		t += my_scheduler.levels[i].time_slice;
 	}
 
+ cout << "ASTHA" << endl;
 	processEventList();
 
 
