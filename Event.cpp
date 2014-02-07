@@ -20,6 +20,10 @@ Event::Event(int id, eventType ty, double ti) {
 bool Event::operator<(const Event& e) const  {
   if (time!=e.time) {return (time > e.time);}
   else if (type == CPU_END) return false;
+  else if (type == CPU_START) {
+    if (e.type == TIME_SLICE) return false; 
+    else return true;
+  }  
   else return true	;
 }
 
