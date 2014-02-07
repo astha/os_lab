@@ -1,5 +1,4 @@
 #include "Event.h"
-#include "declarations.h"
 #include <iostream>
 
 using namespace std;
@@ -20,7 +19,8 @@ using namespace std;
 //This will get the needed effect.
 bool Event::operator<(const Event& e) const  {
   if (time!=e.time) {return (time < e.time);}
-  else return true;
+  else if (type == CPU_END) return true;
+  else return false;
 }
 
 // print event details

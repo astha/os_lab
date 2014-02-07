@@ -9,21 +9,21 @@ defined by an ID, a type and a time at which the event is scheduled.
 using namespace std;
 
 //Enumerated type and namespace to use mnemonics for Event types
-namespace EventTypeNames { enum eventType {IO_START,IO_END,CPU_START,CPU_END};}
+namespace EventTypeNames { enum eventType {CPU_START,CPU_END, CPU_CONT};}
 using namespace EventTypeNames;
 
 class Event {
 
  public:
 
-  double start_time;    //time of event
+  double time;    //time of event
   int process_id;
   eventType type; // event type
   // double stime;   //stores service time for arrivals and waiting time for departures
   // double timeout; //stores the timeout for arrival events
  
   //default constructor, creates an arrival event at time 0
-  Event() { process_id= 0; type=CPU_START; start_time=0.0; }  
+  Event() { process_id= 0; type=CPU_START; time=0.0; }  
   
   // constructor with 5 parameters, 5th parameter is timeout time 
   Event(int id, eventType ty, double ti);  
